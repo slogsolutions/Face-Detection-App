@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Tech System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Orbitron', sans-serif; /* Use a tech-style font */
+            color: #e0e0e0; /* Lighter text color for dark background */
+
+            /* Tech-type advanced background */
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background-size: cover;
+            background-attachment: fixed; /* Fix background position */
+            position: relative; /* Needed for pseudo-element */
+            overflow: hidden; /* Prevent overflow from background pattern */
+        }
+
+        /* Optional: Add a subtle pattern overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0, 255, 255, 0.05),
+                rgba(0, 255, 255, 0.05) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 1; /* Place behind content but above background */
+            animation: pattern-move 60s linear infinite; /* Slow animation */
+        }
+
+        @keyframes pattern-move {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100px 100px; }
+        }
+
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.08); /* Slightly less transparent */
+            backdrop-filter: blur(12px); /* More blur for focus */
+            padding: 40px;
+            border-radius: 15px; /* More rounded corners */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); /* Darker, more pronounced shadow */
+            width: 90%;
+            max-width: 450px; /* Slightly wider */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid rgba(0, 255, 255, 0.3); /* Stronger cyan border */
+            z-index: 2; /* Ensure it's above the background pattern */
+            position: relative; /* Needed for z-index */
+            overflow: hidden; /* Hide elements outside border-radius */
+        }
+
+        /* Optional: Add subtle animated border glow */
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #00ccff, #007bff, #00ccff, #00ffff);
+            background-size: 400% 400%;
+            filter: blur(8px);
+            z-index: -1;
+            animation: border-glow 15s ease infinite;
+            border-radius: 17px; /* Match container + blur */
+            opacity: 0.6;
+        }
+
+        @keyframes border-glow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #00ffff; /* Cyan heading */
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); /* Stronger glow */
+            margin-bottom: 30px;
+            font-size: 2rem; /* Larger heading */
+        }
+
+        .input-group {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #00ccff; /* Lighter cyan label */
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #00ccff; /* Cyan border */
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent input background */
+            color: #e0e0e0; /* Lighter text color */
+            font-family: 'Orbitron', sans-serif; /* Apply tech font */
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00ffff; /* Brighter cyan on focus */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.8); /* Stronger glow on focus */
+        }
+
+        button { /* Apply to all buttons */
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff; /* Blue button */
+            color: white;
+            font-family: 'Orbitron', sans-serif; /* Apply tech font */
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: translateY(-3px); /* Lift button slightly */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0); /* Reset transform on click */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            .input-group input, button {
+                font-size: 1rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>System Login</h2>
+
+        <div id="traditionalLoginForm" class="login-form">
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent actual form submission for this demo
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            console.log("Attempting traditional login with:");
+            console.log("Username:", username);
+            console.log("Password:", password);
+
+            // --- Placeholder for actual traditional login logic ---
+            // For this demo, we'll check for example credentials
+            if (username === "admin" && password === "password") { // Example credentials
+                alert("Traditional login successful!");
+                // Redirect to system.html after successful login
+                window.location.href = 'system.html';
+            } else {
+                alert("Invalid username or password.");
+            }
+            // --- End of Placeholder ---
+        });
+
+    </script>
+</body>
+</html>

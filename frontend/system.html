@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Military Face Recognition System</title>
+    <script src="face-api.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a1929 0%, #0d2b4a 50%, #0a1a2d 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(0, 80, 120, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 80, 120, 0.1) 0%, transparent 20%),
+                linear-gradient(rgba(0, 80, 120, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 80, 120, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(5, 25, 45, 0.85);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 180, 240, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #00aaff, #00ffaa, #00aaff);
+            animation: scanline 3s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100%); }
+        }
+        
+        .logos {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 60, 100, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0, 180, 240, 0.6);
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo-placeholder {
+            font-size: 14px;
+            text-align: center;
+            color: #00ddff;
+            padding: 5px;
+        }
+        
+        h1 {
+            color: #00ffff;
+            text-shadow: 0 0 15px rgba(0, 200, 255, 0.8);
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #00aaff, #00ffcc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        
+        .marquee {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-top: 1px solid rgba(144, 238, 144, 0.4);
+            border-bottom: 1px solid rgba(144, 238, 144, 0.4);
+            margin: 20px 0;
+            color: #90ee90;
+            font-weight: 500;
+            font-size: 1.1rem;
+            border-radius: 8px;
+        }
+        
+        .nav-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        
+        .nav-button {
+            background: linear-gradient(to bottom right, rgba(0, 100, 180, 0.2), rgba(0, 60, 120, 0.3));
+            border: 1px solid rgba(0, 150, 220, 0.4);
+            border-radius: 12px;
+            padding: 25px 15px;
+            color: #fff;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 140px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+        }
+        
+        .nav-button:hover {
+            background: linear-gradient(to bottom right, rgba(0, 120, 200, 0.3), rgba(0, 80, 160, 0.4));
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 100, 200, 0.4);
+        }
+        
+        .nav-button.active {
+            background: linear-gradient(to bottom right, rgba(0, 150, 255, 0.4), rgba(0, 100, 200, 0.5));
+            border-color: #00ffff;
+            box-shadow: 0 0 25px rgba(0, 200, 255, 0.6);
+        }
+        
+        .nav-button i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #00ddff;
+        }
+        
+        .nav-button span {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .section {
+            background: rgba(5, 25, 45, 0.85);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 35px;
+            border: 1px solid rgba(0, 180, 240, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            color: #00ffff;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.6);
+            font-size: 1.8rem;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 180, 240, 0.4);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #00ddff;
+            font-size: 1.1rem;
+        }
+        
+        .form-group input {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00ccff;
+            border-radius: 8px;
+            color: #fff;
+            outline: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 150px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, #28a745, #1e7e34);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, #ffc107, #e0a800);
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #dc3545, #bd2130);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, #6c757d, #5a6268);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(to right, #17a2b8, #138496);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(-2px);
+        }
+        
+        .user-list {
+            margin-top: 25px;
+            border-top: 1px solid rgba(0, 180, 240, 0.4);
+            padding-top: 25px;
+        }
+        
+        .user-list h3 {
+            color: #00ddff;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        .user-item {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(0, 180, 240, 0.3);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .user-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+            border-color: #00ccff;
+        }
+        
+        .user-info {
+            flex-grow: 1;
+        }
+        
+        .user-info strong {
+            color: #00ffff;
+            font-size: 1.2rem;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .scanner-area {
+            position: relative;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            margin-bottom: 25px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+        
+        #scannerVideo, #scannerCanvas {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #00ccff;
+            background: #000;
+        }
+        
+        #scannerCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .recognition-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .recognition-result.known {
+            background: rgba(40, 167, 69, 0.25);
+            border: 2px solid #28a745;
+            color: #90ee90;
+        }
+        
+        .recognition-result.unknown {
+            background: rgba(220, 53, 69, 0.25);
+            border: 2px solid #dc3545;
+            color: #ff7f7f;
+        }
+        
+        .recognition-result.initial {
+            background: rgba(0, 123, 255, 0.25);
+            border: 2px solid #007bff;
+            color: #66ccff;
+        }
+        
+        .recognition-result.error {
+            background: rgba(255, 165, 0, 0.25);
+            border: 2px solid #ffa500;
+            color: #ffcc66;
+        }
+        
+        .logs-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 25px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logs-table th, .logs-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 150, 200, 0.3);
+        }
+        
+        .logs-table th {
+            background: rgba(0, 100, 180, 0.3);
+            color: #00ccff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+        }
+        
+        .logs-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        
+        .logs-table tr:hover {
+            background: rgba(0, 150, 200, 0.1);
+        }
+        
+        .backup-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        #exportDataArea {
+            width: 100%;
+            height: 300px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid #00ccff;
+            border-radius: 12px;
+            color: #fff;
+            font-family: monospace;
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .status-message {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            color: #00ccff;
+            font-size: 1.2rem;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-message.error {
+            background: rgba(220, 53, 69, 0.25);
+            border: 2px solid #dc3545;
+            color: #ff7f7f;
+        }
+        
+        .status-message.success {
+            background: rgba(40, 167, 69, 0.25);
+            border: 2px solid #28a745;
+            color: #90ee90;
+        }
+        
+        .photo-preview {
+            width: 100%;
+            height: 250px;
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            background: #000;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .photo-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #capturePreview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        #capturedPhoto {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        
+        .capture-btn-container {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+        
+        #captureSnapshotBtn {
+            padding: 10px 25px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        #captureSnapshotBtn:hover {
+            background: #c82333;
+            transform: translateY(-3px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: rgba(5, 25, 45, 0.95);
+            border-radius: 15px;
+            padding: 35px;
+            width: 90%;
+            max-width: 550px;
+            border: 1px solid #00ccff;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.7);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            color: #ff5555;
+            transform: scale(1.2);
+        }
+        
+        .modal-title {
+            color: #00ffff;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(0, 200, 255, 0.7);
+        }
+        
+        .modal-body {
+            margin-bottom: 25px;
+        }
+        
+        .modal-body p {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        /* Debug panel */
+        .debug-panel {
+            background: rgba(0, 30, 60, 0.9);
+            border: 1px solid #00ccff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            font-family: monospace;
+            font-size: 1rem;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .debug-title {
+            color: #00ffff;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.3rem;
+        }
+        
+        .debug-content {
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+        
+        .clear-debug {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .clear-debug:hover {
+            background: #0069d9;
+            transform: translateY(-2px);
+        }
+        
+        .storage-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 60, 120, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 150, 200, 0.4);
+        }
+        
+        .storage-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .storage-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #00ffff;
+            margin-top: 5px;
+        }
+        
+        .storage-label {
+            color: #90ee90;
+            font-size: 1.1rem;
+        }
+        
+        .user-details-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .user-face-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            border: 2px solid #00ccff;
+            margin: 0 auto;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .user-face-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .user-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-detail-label {
+            font-size: 0.9rem;
+            color: #00ddff;
+            margin-bottom: 5px;
+        }
+        
+        .user-detail-value {
+            font-size: 1rem;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid rgba(0, 180, 240, 0.3);
+        }
+        
+        @media (max-width: 992px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .scanner-area {
+                min-height: 400px;
+            }
+            
+            .logos {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .user-details {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .nav-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-section {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <div class="logos">
+                <div class="logo">
+                    <div class="logo-placeholder">Military Unit<br>Logo</div>
+                </div>
+                <div class="logo">
+                    <div class="logo-placeholder">Facial Recognition<br>System</div>
+                </div>
+            </div>
+            
+            <h1>MILITARY FACIAL RECOGNITION SYSTEM</h1>
+            <marquee behavior="alternate" direction="" scrollamount="20"><h2>Made By Slog Solutions Pvt Ltd</h2></marquee>
+            
+            <div class="marquee">
+                <span>SECURE ACCESS • REAL-TIME IDENTIFICATION • ENTRY/EXIT LOGGING • DATA EXPORT</span>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <div class="nav-button active" data-section="user-management">
+                <i>👤</i>
+                <span>USER MANAGEMENT</span>
+            </div>
+            <div class="nav-button" data-section="face-scanner">
+                <i>📷</i>
+                <span>FACE SCANNER</span>
+            </div>
+            <div class="nav-button" data-section="logs">
+                <i>📋</i>
+                <span>ENTRY/EXIT LOGS</span>
+            </div>
+            <div class="nav-button" data-section="backup">
+                <i>💾</i>
+                <span>BACKUP/EXPORT</span>
+            </div>
+        </div>
+        
+        <div id="statusMessage" class="status-message">
+            Loading face recognition models...
+        </div>
+        
+        <!-- User Management Section -->
+        <div id="user-management" class="section active">
+            <h2 class="section-title">User Management</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="userId">ID Number:</label>
+                    <input type="text" id="userId" placeholder="Enter ID number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userName">Full Name:</label>
+                    <input type="text" id="userName" placeholder="Enter full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userRank">Rank:</label>
+                    <input type="text" id="userRank" placeholder="Enter rank">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userIdCard">ID Card Number:</label>
+                    <input type="text" id="userIdCard" placeholder="Enter ID card number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userPhone">Phone Number:</label>
+                    <input type="text" id="userPhone" placeholder="Enter phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="userUnit">Unit:</label>
+                    <input type="text" id="userUnit" placeholder="Enter unit">
+                </div>
+                
+                <div class="form-group">
+                    <label>Photo Capture:</label>
+                    <button class="btn btn-secondary" id="startCaptureBtn">Start Capture</button>
+                    <div class="photo-preview">
+                        <div class="photo-container">
+                            <video id="capturePreview" autoplay playsinline></video>
+                            <img id="capturedPhoto" src="" alt="Captured Photo">
+                            <div class="capture-btn-container">
+                                <button id="captureSnapshotBtn">Capture Photo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-buttons">
+                <button class="btn btn-success" id="addUserBtn">Add User</button>
+                <button class="btn btn-warning" id="updateUserBtn">Update User</button>
+                <button class="btn btn-danger" id="deleteUserBtn">Delete User</button>
+                <button class="btn btn-secondary" id="resetFormBtn">Reset Form</button>
+            </div>
+            
+            <div class="user-list">
+                <h3>Registered Users</h3>
+                <div id="registeredUsersList">
+                    <div class="user-item">
+                        <div class="user-info">Loading users...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Face Scanner Section -->
+        <div id="face-scanner" class="section">
+            <h2 class="section-title">Face Scanner</h2>
+            
+            <div class="scanner-area">
+                <video id="scannerVideo" autoplay muted playsinline></video>
+                <canvas id="scannerCanvas"></canvas>
+            </div>
+            
+            <div id="recognitionResult" class="recognition-result initial">
+                Initializing face scanner...
+            </div>
+            
+            <div class="form-buttons">
+                <button class="btn btn-primary" id="startScannerBtn">Start Scanner</button>
+                <button class="btn btn-secondary" id="stopScannerBtn">Stop Scanner</button>
+            </div>
+            
+            <div class="debug-panel">
+                <div class="debug-title">
+                    <span>System Diagnostics</span>
+                    <button class="clear-debug" id="clearDebugBtn">Clear</button>
+                </div>
+                <div class="debug-content" id="debugOutput"></div>
+            </div>
+        </div>
+        
+        <!-- Logs Section -->
+        <div id="logs" class="section">
+            <h2 class="section-title">Entry/Exit Logs</h2>
+            
+            <table class="logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                    <tr>
+                        <td colspan="4">Loading logs...</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="form-buttons">
+                <button class="btn btn-primary" id="refreshLogsBtn">Refresh Logs</button>
+                <button class="btn btn-info" id="exportLogsBtn">Export Logs to Excel</button>
+            </div>
+        </div>
+        
+        <!-- Backup Section -->
+        <div id="backup" class="section">
+            <h2 class="section-title">Backup & Export</h2>
+            
+            <div class="backup-controls">
+                <button class="btn btn-success" id="exportUsersBtn">Export Users to Excel</button>
+                <button class="btn btn-info" id="exportLogsBtn2">Export Logs to Excel</button>
+                <button class="btn btn-primary" id="showExportBtn">Show Export Data</button>
+            </div>
+            
+            <div class="storage-info">
+                <div class="storage-item">
+                    <div class="storage-label">Registered Users</div>
+                    <div class="storage-value" id="userCount">0</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-label">Log Entries</div>
+                    <div class="storage-value" id="logCount">0</div>
+                </div>
+                <div class="storage-item">
+                    <div class="storage-label">Storage Used</div>
+                    <div class="storage-value" id="storageUsed">0 KB</div>
+                </div>
+            </div>
+            
+            <textarea id="exportDataArea" readonly placeholder="Exported data will appear here..."></textarea>
+        </div>
+    </div>
+    
+    <!-- Log Modal -->
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 class="modal-title">Create Log Entry</h3>
+            
+            <div class="modal-body">
+                <div class="user-details-container">
+                    <div class="user-face-preview">
+                        <img id="modalUserFace" src="" alt="User Face">
+                    </div>
+                    
+                    <div class="user-details">
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">ID Number</span>
+                            <span class="user-detail-value" id="modalUserId">N/A</span>
+                        </div>
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Name</span>
+                            <span class="user-detail-value" id="modalUserName">Unknown</span>
+                        </div>
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Rank</span>
+                            <span class="user-detail-value" id="modalUserRank">N/A</span>
+                        </div>
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Unit</span>
+                            <span class="user-detail-value" id="modalUserUnit">N/A</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="logStatus">Status:</label>
+                    <select id="logStatus" class="form-group" style="padding: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid #00ccff; border-radius: 5px; color: #fff; width: 100%;">
+                        <option value="Entry">Entry</option>
+                        <option value="Exit">Exit</option>
+                        <option value="Suspicious">Suspicious Activity</option>
+                        <option value="Denied">Access Denied</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="cancelScanBtn">Cancel</button>
+                <button class="btn btn-secondary" id="scanAgainBtn">Scan Again</button>
+                <button class="btn btn-success" id="submitLogBtn">Submit Log</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const FACE_MATCH_THRESHOLD = 0.6;
+        
+        // DOM Elements
+        const statusMessage = document.getElementById('statusMessage');
+        const userIdInput = document.getElementById('userId');
+        const userNameInput = document.getElementById('userName');
+        const userRankInput = document.getElementById('userRank');
+        const userIdCardInput = document.getElementById('userIdCard');
+        const userPhoneInput = document.getElementById('userPhone');
+        const userUnitInput = document.getElementById('userUnit');
+        const capturePreview = document.getElementById('capturePreview');
+        const capturedPhoto = document.getElementById('capturedPhoto');
+        const captureSnapshotBtn = document.getElementById('captureSnapshotBtn');
+        const startCaptureBtn = document.getElementById('startCaptureBtn');
+        const registeredUsersList = document.getElementById('registeredUsersList');
+        const logsTableBody = document.getElementById('logsTableBody');
+        const exportDataArea = document.getElementById('exportDataArea');
+        const recognitionResultDiv = document.getElementById('recognitionResult');
+        const scannerVideo = document.getElementById('scannerVideo');
+        const scannerCanvas = document.getElementById('scannerCanvas');
+        const startScannerBtn = document.getElementById('startScannerBtn');
+        const stopScannerBtn = document.getElementById('stopScannerBtn');
+        const addUserBtn = document.getElementById('addUserBtn');
+        const updateUserBtn = document.getElementById('updateUserBtn');
+        const deleteUserBtn = document.getElementById('deleteUserBtn');
+        const resetFormBtn = document.getElementById('resetFormBtn');
+        const refreshLogsBtn = document.getElementById('refreshLogsBtn');
+        const exportUsersBtn = document.getElementById('exportUsersBtn');
+        const exportLogsBtn = document.getElementById('exportLogsBtn');
+        const exportLogsBtn2 = document.getElementById('exportLogsBtn2');
+        const showExportBtn = document.getElementById('showExportBtn');
+        const logModal = document.getElementById('logModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const modalUserFace = document.getElementById('modalUserFace');
+        const modalUserId = document.getElementById('modalUserId');
+        const modalUserName = document.getElementById('modalUserName');
+        const modalUserRank = document.getElementById('modalUserRank');
+        const modalUserUnit = document.getElementById('modalUserUnit');
+        const logStatusInput = document.getElementById('logStatus');
+        const submitLogBtn = document.getElementById('submitLogBtn');
+        const scanAgainBtn = document.getElementById('scanAgainBtn');
+        const cancelScanBtn = document.getElementById('cancelScanBtn');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const sections = document.querySelectorAll('.section');
+        const debugOutput = document.getElementById('debugOutput');
+        const clearDebugBtn = document.getElementById('clearDebugBtn');
+        const userCount = document.getElementById('userCount');
+        const logCount = document.getElementById('logCount');
+        const storageUsed = document.getElementById('storageUsed');
+        
+        // Global variables
+        let registeredUsers = [];
+        let faceMatcher = null;
+        let scannerInterval = null;
+        let scannerStream = null;
+        let captureStream = null;
+        let currentDetectedUser = null;
+        let displaySize;
+        let isModelsLoaded = false;
+        let isDetectionPaused = false;
+        let lastDetectedFaceImage = null;
+        
+        // Debug logging
+        function debugLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            debugOutput.appendChild(logEntry);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+        
+        // Update storage info
+        function updateStorageInfo() {
+            userCount.textContent = registeredUsers.length;
+            
+            const logs = loadLogsFromLocalStorage();
+            logCount.textContent = logs.length;
+            
+            // Calculate storage size
+            const data = {
+                users: registeredUsers,
+                logs: logs
+            };
+            const json = JSON.stringify(data);
+            const bytes = new TextEncoder().encode(json).length;
+            const kb = (bytes / 1024).toFixed(2);
+            storageUsed.textContent = `${kb} KB`;
+        }
+        
+        // LocalStorage operations
+        function saveUsersToLocalStorage() {
+            localStorage.setItem('militaryUsers', JSON.stringify(registeredUsers));
+            debugLog('Users saved to localStorage');
+            updateStorageInfo();
+        }
+        
+        function loadUsersFromLocalStorage() {
+            const users = JSON.parse(localStorage.getItem('militaryUsers') || '[]');
+            registeredUsers = users;
+            debugLog(`Loaded ${registeredUsers.length} users from localStorage`);
+            return registeredUsers;
+        }
+        
+        function saveLogsToLocalStorage(logs) {
+            localStorage.setItem('militaryLogs', JSON.stringify(logs));
+            debugLog('Logs saved to localStorage');
+            updateStorageInfo();
+        }
+        
+        function loadLogsFromLocalStorage() {
+            const logs = JSON.parse(localStorage.getItem('militaryLogs') || '[]');
+            debugLog(`Loaded ${logs.length} logs from localStorage`);
+            return logs;
+        }
+        
+        // Navigation handling
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const sectionId = button.dataset.section;
+                
+                // Update active button
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Show corresponding section
+                sections.forEach(section => section.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+                
+                // Special handling for sections
+                if (sectionId === 'face-scanner') {
+                    startScanner();
+                } else if (sectionId === 'logs') {
+                    loadLogs();
+                } else if (scannerStream) {
+                    stopScanner();
+                }
+                
+                // Update storage info for backup section
+                if (sectionId === 'backup') {
+                    updateStorageInfo();
+                }
+            });
+        });
+        
+        // Initialize Face API models
+        async function loadModels() {
+            try {
+                statusMessage.textContent = 'Loading face recognition models...';
+                debugLog('Starting model loading...');
+                
+                // Load models from correct path
+                await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+                await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+                await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+                await faceapi.nets.faceExpressionNet.loadFromUri('/models');
+                
+                statusMessage.textContent = 'Models loaded successfully. System ready.';
+                statusMessage.classList.add('success');
+                isModelsLoaded = true;
+                debugLog('Face recognition models loaded successfully');
+                
+                // Load users and logs
+                loadUsers();
+                loadLogs();
+                updateStorageInfo();
+            } catch (error) {
+                const errorMsg = `Error loading models: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('Model loading error:', error);
+            }
+        }
+        
+        // Load users from localStorage
+        function loadUsers() {
+            try {
+                debugLog('Loading users from localStorage...');
+                registeredUsers = loadUsersFromLocalStorage();
+                renderUsersList();
+                createFaceMatcher();
+            } catch (error) {
+                const errorMsg = `Error loading users: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('User loading error:', error);
+            }
+        }
+        
+        // Create face matcher for recognition
+        function createFaceMatcher() {
+            if (registeredUsers.length === 0) {
+                faceMatcher = null;
+                debugLog('No registered users for face matching');
+                return;
+            }
+            
+            const labeledDescriptors = [];
+            let validDescriptors = 0;
+            
+            for (const user of registeredUsers) {
+                if (user.descriptor && Array.isArray(user.descriptor)) {
+                    debugLog(`Checking user: ${user.name}, descriptor length: ${user.descriptor.length}`);
+                    if (user.descriptor.length === 128) {
+                        try {
+                            const descriptor = new Float32Array(user.descriptor);
+                            labeledDescriptors.push(
+                                new faceapi.LabeledFaceDescriptors(user.id, [descriptor])
+                            );
+                            validDescriptors++;
+                            debugLog(`Added descriptor for user: ${user.name}`);
+                        } catch (e) {
+                            debugLog(`Error processing descriptor for ${user.name}: ${e.message}`);
+                        }
+                    } else {
+                        debugLog(`Skipping user ${user.name} - descriptor length is ${user.descriptor.length}, expected 128`);
+                    }
+                } else {
+                    debugLog(`Skipping user ${user.name} - descriptor is ${user.descriptor ? typeof user.descriptor : 'null'}`);
+                }
+            }
+            
+            if (labeledDescriptors.length > 0) {
+                faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, FACE_MATCH_THRESHOLD);
+                debugLog(`FaceMatcher created with ${validDescriptors} valid descriptors`);
+            } else {
+                faceMatcher = null;
+                debugLog('No valid descriptors found for face matching');
+            }
+        }
+        
+        // Render users list
+        function renderUsersList() {
+            registeredUsersList.innerHTML = '';
+            
+            if (registeredUsers.length === 0) {
+                registeredUsersList.innerHTML = `
+                    <div class="user-item">
+                        <div class="user-info">No users registered yet</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            registeredUsers.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <strong>${user.name}</strong> (${user.id})<br>
+                        Rank: ${user.rank || 'N/A'} | Unit: ${user.unit || 'N/A'}
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-primary btn-sm select-user" data-id="${user.id}">Select</button>
+                        <button class="btn btn-danger btn-sm delete-user" data-id="${user.id}">Delete</button>
+                    </div>
+                `;
+                registeredUsersList.appendChild(userItem);
+            });
+            
+            // Add event listeners for select buttons
+            document.querySelectorAll('.select-user').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.dataset.id;
+                    selectUser(userId);
+                });
+            });
+            
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-user').forEach(button => {
+                button.addEventListener('click', () => {
+                    const userId = button.dataset.id;
+                    deleteUser(userId);
+                });
+            });
+        }
+        
+        // Select user for editing
+        function selectUser(userId) {
+            const user = registeredUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            userIdInput.value = user.id;
+            userNameInput.value = user.name;
+            userRankInput.value = user.rank || '';
+            userIdCardInput.value = user.idCard || '';
+            userPhoneInput.value = user.phone || '';
+            userUnitInput.value = user.unit || '';
+            
+            if (user.photo) {
+                capturedPhoto.src = user.photo;
+                capturedPhoto.style.display = 'block';
+                capturePreview.style.display = 'none';
+                captureSnapshotBtn.style.display = 'none';
+            }
+        }
+        
+        // Delete user
+        function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            registeredUsers = registeredUsers.filter(u => u.id !== userId);
+            saveUsersToLocalStorage();
+            renderUsersList();
+            createFaceMatcher();
+            
+            debugLog(`Deleted user: ${userId}`);
+            statusMessage.textContent = `User deleted successfully`;
+            statusMessage.classList.add('success');
+            
+            // Reset form if we were editing this user
+            if (userIdInput.value === userId) {
+                resetForm();
+            }
+        }
+        
+        // Reset form
+        function resetForm() {
+            userIdInput.value = '';
+            userNameInput.value = '';
+            userRankInput.value = '';
+            userIdCardInput.value = '';
+            userPhoneInput.value = '';
+            userUnitInput.value = '';
+            capturedPhoto.src = '';
+            capturedPhoto.style.display = 'none';
+            capturePreview.style.display = 'none';
+            captureSnapshotBtn.style.display = 'none';
+            
+            // Stop any capture stream
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+        }
+        
+        // Start photo capture process
+        async function startCapture() {
+            try {
+                debugLog('Starting photo capture process...');
+                // Stop any existing capture stream
+                if (captureStream) {
+                    captureStream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Start new capture stream
+                captureStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                // Show capture preview
+                capturePreview.srcObject = captureStream;
+                capturePreview.style.display = 'block';
+                capturedPhoto.style.display = 'none';
+                captureSnapshotBtn.style.display = 'block';
+                
+                // Play the video
+                await capturePreview.play();
+                debugLog('Camera stream started for photo capture');
+                
+            } catch (error) {
+                const errorMsg = `Camera error: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('Photo capture error:', error);
+            }
+        }
+        
+        // Capture photo snapshot
+        function captureSnapshot() {
+            const canvas = document.createElement('canvas');
+            canvas.width = capturePreview.videoWidth;
+            canvas.height = capturePreview.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(capturePreview, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data URL and display it
+            capturedPhoto.src = canvas.toDataURL('image/jpeg', 0.8);
+            capturedPhoto.style.display = 'block';
+            capturePreview.style.display = 'none';
+            captureSnapshotBtn.style.display = 'none';
+            
+            // Stop the capture stream
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+            
+            debugLog('Photo captured successfully');
+        }
+        
+        // Start face scanner
+        async function startScanner() {
+            // Stop any existing stream
+            stopScanner();
+            
+            recognitionResultDiv.textContent = 'Starting camera...';
+            recognitionResultDiv.className = 'recognition-result initial';
+            debugLog('Starting face scanner...');
+            
+            try {
+                scannerStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                scannerVideo.srcObject = scannerStream;
+                
+                // Set up canvas once video metadata is loaded
+                scannerVideo.onloadedmetadata = () => {
+                    displaySize = { 
+                        width: scannerVideo.videoWidth, 
+                        height: scannerVideo.videoHeight 
+                    };
+                    
+                    scannerCanvas.width = displaySize.width;
+                    scannerCanvas.height = displaySize.height;
+                    
+                    faceapi.matchDimensions(scannerCanvas, displaySize);
+                    
+                    // Start detection loop
+                    scannerInterval = setInterval(detectFaces, 300);
+                    debugLog(`Camera started at ${displaySize.width}x${displaySize.height}`);
+                };
+                
+                // Play the video
+                await scannerVideo.play();
+                debugLog('Camera stream started for face scanner');
+                
+            } catch (error) {
+                const errorMsg = `Camera error: ${error.message}`;
+                recognitionResultDiv.innerHTML = `${errorMsg}<br>Please allow camera access`;
+                recognitionResultDiv.className = 'recognition-result error';
+                debugLog(errorMsg);
+                console.error('Camera access error:', error);
+            }
+        }
+        
+        // Stop scanner
+        function stopScanner() {
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+                scannerInterval = null;
+                debugLog('Stopped face detection interval');
+            }
+            
+            if (scannerStream) {
+                scannerStream.getTracks().forEach(track => track.stop());
+                scannerStream = null;
+                debugLog('Stopped camera stream');
+            }
+            
+            scannerVideo.srcObject = null;
+            const ctx = scannerCanvas.getContext('2d');
+            ctx.clearRect(0, 0, scannerCanvas.width, scannerCanvas.height);
+            
+            recognitionResultDiv.textContent = 'Scanner stopped';
+            recognitionResultDiv.className = 'recognition-result initial';
+            isDetectionPaused = false;
+        }
+        
+        // Face detection function
+        async function detectFaces() {
+            if (scannerVideo.paused || scannerVideo.ended || !isModelsLoaded || isDetectionPaused) {
+                return;
+            }
+            
+            try {
+                const detections = await faceapi.detectAllFaces(
+                    scannerVideo, 
+                    new faceapi.TinyFaceDetectorOptions()
+                ).withFaceLandmarks().withFaceDescriptors();
+                
+                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                const ctx = scannerCanvas.getContext('2d');
+                ctx.clearRect(0, 0, scannerCanvas.width, scannerCanvas.height);
+                
+                if (resizedDetections.length === 0) {
+                    recognitionResultDiv.textContent = 'No face detected - Position your face in frame';
+                    recognitionResultDiv.className = 'recognition-result initial';
+                    return;
+                }
+                
+                // Draw detections
+                faceapi.draw.drawDetections(scannerCanvas, resizedDetections);
+                faceapi.draw.drawFaceLandmarks(scannerCanvas, resizedDetections);
+                
+                // Handle recognition
+                if (!faceMatcher || faceMatcher.labeledDescriptors.length === 0) {
+                    recognitionResultDiv.textContent = 'No registered users with valid face data';
+                    recognitionResultDiv.className = 'recognition-result initial';
+                    return;
+                }
+                
+                const detection = resizedDetections[0];
+                const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                const distance = bestMatch.distance.toFixed(2);
+                
+                // Draw box with recognition result
+                const box = detection.detection.box;
+                const drawOptions = {
+                    label: `${bestMatch.label} (${distance})`,
+                    lineWidth: 2
+                };
+                
+                // Capture the detected face image
+                const faceCanvas = document.createElement('canvas');
+                faceCanvas.width = box.width;
+                faceCanvas.height = box.height;
+                const faceCtx = faceCanvas.getContext('2d');
+                faceCtx.drawImage(
+                    scannerVideo,
+                    box.x, box.y, box.width, box.height,
+                    0, 0, box.width, box.height
+                );
+                lastDetectedFaceImage = faceCanvas.toDataURL('image/jpeg', 0.8);
+                
+                if (bestMatch.distance < FACE_MATCH_THRESHOLD) {
+                    drawOptions.boxColor = 'green';
+                    recognitionResultDiv.innerHTML = `IDENTIFIED: <strong>${bestMatch.label}</strong>`;
+                    recognitionResultDiv.className = 'recognition-result known';
+                    
+                    // Find the matched user
+                    const matchedUser = registeredUsers.find(u => u.id === bestMatch.label);
+                    if (matchedUser) {
+                        isDetectionPaused = true; // Pause detection while modal is open
+                        openLogModal(matchedUser);
+                    }
+                } else {
+                    drawOptions.boxColor = 'red';
+                    recognitionResultDiv.innerHTML = `UNKNOWN (Score: ${distance})`;
+                    recognitionResultDiv.className = 'recognition-result unknown';
+                    isDetectionPaused = true; // Pause detection while modal is open
+                    openLogModal(null);
+                }
+                
+                const drawBox = new faceapi.draw.DrawBox(box, drawOptions);
+                drawBox.draw(scannerCanvas);
+                
+            } catch (error) {
+                const errorMsg = `Face detection error: ${error.message}`;
+                console.error(errorMsg, error);
+                recognitionResultDiv.textContent = errorMsg;
+                recognitionResultDiv.className = 'recognition-result error';
+                debugLog(errorMsg);
+            }
+        }
+        
+        // Open log modal
+        function openLogModal(user) {
+            currentDetectedUser = user;
+            
+            // Set user details in modal
+            if (user) {
+                modalUserId.textContent = user.id;
+                modalUserName.textContent = user.name;
+                modalUserRank.textContent = user.rank || 'N/A';
+                modalUserUnit.textContent = user.unit || 'N/A';
+                
+                // Use stored photo if available, otherwise use the last detected face
+                modalUserFace.src = user.photo || lastDetectedFaceImage;
+            } else {
+                modalUserId.textContent = 'N/A';
+                modalUserName.textContent = 'Unknown';
+                modalUserRank.textContent = 'N/A';
+                modalUserUnit.textContent = 'N/A';
+                modalUserFace.src = lastDetectedFaceImage;
+            }
+            
+            logStatusInput.value = 'Entry';
+            logModal.style.display = 'flex';
+            debugLog(`Opening log modal for: ${user ? user.name : 'Unknown'}`);
+        }
+        
+        // Close log modal
+        function closeLogModal() {
+            logModal.style.display = 'none';
+            currentDetectedUser = null;
+            isDetectionPaused = false; // Resume detection
+            debugLog('Closed log modal');
+        }
+        
+        // Submit log entry
+        function submitLog() {
+            const status = logStatusInput.value;
+            if (!status) {
+                alert('Please select a status');
+                return;
+            }
+            
+            try {
+                const logs = loadLogsFromLocalStorage();
+                const newLog = {
+                    timestamp: new Date().toISOString(),
+                    user_id: currentDetectedUser ? currentDetectedUser.id : 'N/A',
+                    user_name: currentDetectedUser ? currentDetectedUser.name : 'Unknown',
+                    status: status
+                };
+                
+                logs.push(newLog);
+                saveLogsToLocalStorage(logs);
+                
+                closeLogModal();
+                
+                // Switch to logs section
+                document.querySelector('.nav-button[data-section="logs"]').click();
+                
+                // Stop scanner
+                stopScanner();
+                
+                debugLog(`Log entry created for: ${currentDetectedUser ? currentDetectedUser.name : 'Unknown'} (${status})`);
+            } catch (error) {
+                const errorMsg = `Error creating log: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('Log creation error:', error);
+            }
+        }
+        
+        // Scan again button handler
+        function handleScanAgain() {
+            closeLogModal();
+            isDetectionPaused = false; // Resume detection
+            debugLog('User requested to scan again');
+        }
+        
+        // Cancel scan button handler
+        function handleCancelScan() {
+            closeLogModal();
+            stopScanner();
+            debugLog('User canceled scanning');
+        }
+        
+        // Load logs from localStorage
+        function loadLogs() {
+            try {
+                debugLog('Loading logs from localStorage...');
+                const logs = loadLogsFromLocalStorage();
+                renderLogsTable(logs);
+                debugLog(`Loaded ${logs.length} log entries`);
+            } catch (error) {
+                const errorMsg = `Error loading logs: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('Log loading error:', error);
+            }
+        }
+        
+        // Render logs table
+        function renderLogsTable(logs) {
+            logsTableBody.innerHTML = '';
+            
+            if (logs.length === 0) {
+                logsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center;">No log entries found</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Show latest logs first
+            logs.slice().reverse().forEach(log => {
+                const row = document.createElement('tr');
+                const date = new Date(log.timestamp);
+                const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${log.user_id}</td>
+                    <td>${log.user_name}</td>
+                    <td>${log.status}</td>
+                `;
+                logsTableBody.appendChild(row);
+            });
+        }
+        
+        // Export data as Excel
+        function exportToExcel(data, fileName) {
+            try {
+                // Create worksheet
+                const ws = XLSX.utils.json_to_sheet(data);
+                
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Data");
+                
+                // Export to file
+                XLSX.writeFile(wb, `${fileName}.xlsx`);
+                
+                debugLog(`Exported data to ${fileName}.xlsx`);
+                statusMessage.textContent = `Exported ${fileName} successfully`;
+                statusMessage.classList.add('success');
+            } catch (error) {
+                const errorMsg = `Error exporting to Excel: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+            }
+        }
+        
+        // Export user data to Excel
+        function exportUsers() {
+            if (registeredUsers.length === 0) {
+                statusMessage.textContent = "No user data to export";
+                statusMessage.classList.add('error');
+                return;
+            }
+            
+            // Prepare user data for export
+            const usersData = registeredUsers.map(user => ({
+                ID: user.id,
+                Name: user.name,
+                Rank: user.rank || 'N/A',
+                'ID Card': user.idCard || 'N/A',
+                Phone: user.phone || 'N/A',
+                Unit: user.unit || 'N/A',
+                'Face Data': user.descriptor ? 'Available' : 'Not Available'
+            }));
+            
+            exportToExcel(usersData, 'military_users');
+        }
+        
+        // Export logs to Excel
+        function exportLogs() {
+            const logs = loadLogsFromLocalStorage();
+            
+            if (logs.length === 0) {
+                statusMessage.textContent = "No log data to export";
+                statusMessage.classList.add('error');
+                return;
+            }
+            
+            // Prepare log data for export
+            const logsData = logs.map(log => ({
+                Timestamp: new Date(log.timestamp).toLocaleString(),
+                'User ID': log.user_id,
+                Name: log.user_name,
+                Status: log.status
+            }));
+            
+            exportToExcel(logsData, 'military_logs');
+        }
+        
+        // Toggle export data display
+        function toggleExportData() {
+            if (exportDataArea.style.display === 'block') {
+                exportDataArea.style.display = 'none';
+                showExportBtn.textContent = 'Show Export Data';
+            } else {
+                exportDataArea.value = "Use the export buttons above to download Excel files";
+                showExportBtn.textContent = 'Hide Export Data';
+                exportDataArea.style.display = 'block';
+            }
+        }
+        
+        // Add new user
+        async function addUser() {
+            const id = userIdInput.value.trim();
+            const name = userNameInput.value.trim();
+            const photo = capturedPhoto.src;
+            
+            if (!id || !name) {
+                statusMessage.textContent = 'ID and Name are required';
+                statusMessage.classList.add('error');
+                return;
+            }
+            
+            if (!photo || !photo.startsWith('data:image')) {
+                statusMessage.textContent = 'Please capture a photo first';
+                statusMessage.classList.add('error');
+                return;
+            }
+            
+            try {
+                debugLog(`Adding new user: ${name} (${id})`);
+                
+                // Generate face descriptor from photo
+                const img = await faceapi.fetchImage(photo);
+                const detections = await faceapi.detectSingleFace(
+                    img, 
+                    new faceapi.TinyFaceDetectorOptions()
+                ).withFaceLandmarks().withFaceDescriptor();
+                
+                if (!detections) {
+                    statusMessage.textContent = 'No face detected in photo';
+                    statusMessage.classList.add('error');
+                    debugLog('No face detected in captured photo');
+                    return;
+                }
+                
+                // Convert descriptor to array
+                const descriptorArray = Array.from(detections.descriptor);
+                debugLog(`Descriptor generated: ${descriptorArray.length} elements`);
+                
+                // Create user object
+                const user = {
+                    id: id,
+                    name: name,
+                    rank: userRankInput.value.trim(),
+                    idCard: userIdCardInput.value.trim(),
+                    phone: userPhoneInput.value.trim(),
+                    unit: userUnitInput.value.trim(),
+                    photo: photo,
+                    descriptor: descriptorArray
+                };
+                
+                // Check if user already exists
+                const existingIndex = registeredUsers.findIndex(u => u.id === id);
+                if (existingIndex !== -1) {
+                    // Update existing user
+                    registeredUsers[existingIndex] = user;
+                    debugLog(`Updated existing user: ${name}`);
+                    statusMessage.textContent = `User ${name} updated successfully`;
+                } else {
+                    // Add new user
+                    registeredUsers.push(user);
+                    debugLog(`Added new user: ${name}`);
+                    statusMessage.textContent = `User ${name} added successfully`;
+                }
+                
+                // Save to localStorage
+                saveUsersToLocalStorage();
+                
+                statusMessage.classList.add('success');
+                
+                // Refresh user list and face matcher
+                renderUsersList();
+                createFaceMatcher();
+                resetForm();
+            } catch (error) {
+                const errorMsg = `Error adding user: ${error.message}`;
+                statusMessage.textContent = errorMsg;
+                statusMessage.classList.add('error');
+                debugLog(errorMsg);
+                console.error('User creation error:', error);
+            }
+        }
+        
+        // Initialize event listeners
+        function initEventListeners() {
+            // Buttons
+            startScannerBtn.addEventListener('click', startScanner);
+            stopScannerBtn.addEventListener('click', stopScanner);
+            startCaptureBtn.addEventListener('click', startCapture);
+            captureSnapshotBtn.addEventListener('click', captureSnapshot);
+            addUserBtn.addEventListener('click', addUser);
+            updateUserBtn.addEventListener('click', () => {
+                const id = userIdInput.value.trim();
+                if (id) {
+                    addUser(); // Update will be handled in addUser function
+                } else {
+                    statusMessage.textContent = 'Please select a user to update';
+                    statusMessage.classList.add('error');
+                }
+            });
+            deleteUserBtn.addEventListener('click', () => {
+                const id = userIdInput.value.trim();
+                if (id) {
+                    deleteUser(id);
+                } else {
+                    statusMessage.textContent = 'Please select a user to delete';
+                    statusMessage.classList.add('error');
+                }
+            });
+            resetFormBtn.addEventListener('click', resetForm);
+            refreshLogsBtn.addEventListener('click', loadLogs);
+            exportUsersBtn.addEventListener('click', exportUsers);
+            exportLogsBtn.addEventListener('click', exportLogs);
+            exportLogsBtn2.addEventListener('click', exportLogs);
+            showExportBtn.addEventListener('click', toggleExportData);
+            clearDebugBtn.addEventListener('click', () => {
+                debugOutput.innerHTML = '';
+                debugLog('Debug log cleared');
+            });
+            
+            // Modal
+            closeModalBtn.addEventListener('click', closeLogModal);
+            submitLogBtn.addEventListener('click', submitLog);
+            scanAgainBtn.addEventListener('click', handleScanAgain);
+            cancelScanBtn.addEventListener('click', handleCancelScan);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === logModal) closeLogModal();
+            });
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initEventListeners();
+            loadModels();
+            
+            // Initialize with sample data if no users exist
+            if (!localStorage.getItem('militaryUsers')) {
+                debugLog('Initializing with sample data');
+                registeredUsers = [];
+                saveUsersToLocalStorage();
+                saveLogsToLocalStorage([]);
+            }
+        });
+    </script>
+</body>
+</html>
