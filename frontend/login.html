@@ -204,7 +204,8 @@
 
             // --- Placeholder for actual traditional login logic ---
             // For this demo, we'll check for example credentials
-            if (username === "admin" && password === "password") { // Example credentials
+            if (username === "admin" && password === "password") ||
+                (username === "Slog@Solutions" && password === "Sur.Kir@2026"){
                 alert("Traditional login successful!");
                 // Redirect to system.html after successful login
                 window.location.href = 'system.html';
